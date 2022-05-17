@@ -179,31 +179,42 @@ function selectColor(selectPart, posX, posY, brightness) {
         colorR = dist(imgColor.width / 2 + posX, imgColor.height + posY, mouseX, mouseY);
         colorG = dist(imgColor.width / 2 * (1 - sqrt(3) / 2) + posX, imgColor.height / 2 / 2 + posY, mouseX, mouseY);
         colorB = dist(imgColor.width / 2 * (1 + sqrt(3) / 2) + posX, imgColor.height / 2 / 2 + posY, mouseX, mouseY);
-        if (colorR > imgColor.height / 2) {
+        const tempSin = 1 / sin(120);
+        if (colorR > tempSin * imgColor.height / 2) {
+            // tempSin * imgColor.height/2는 R,G,B 각각 서로의 길이
+            colorR = 0;
+            colorRT = colorR;
+        } else if (colorR > imgColor.height / 2) {
             // colorR이 원의 중심까지의 길이보다 멀면 255~0으로 설정
-            colorR = map(colorR, imgColor.height / 2, imgColor.height, 255, 0);
+            colorR = map(colorR, imgColor.height / 2, tempSin * imgColor.height / 2, 255, 0);
             colorRT = colorR;
         } else {
             // colorR이 원의 중심까지의 길이보다 가까우면 255로 설정
             colorR = 255;
             colorRT = colorR;
         }
-        if (colorG > imgColor.height / 2) {
+        if (colorG > tempSin * imgColor.height / 2) {
+            colorG = 0;
+            colorGT = colorG;
+        } else if (colorG > imgColor.height / 2) {
             // colorG가 원의 중심까지의 길이보다 멀면 255~0으로 설정
-            colorG = map(colorG, imgColor.height / 2, imgColor.height, 255, 0);
+            colorG = map(colorG, imgColor.height / 2, tempSin * imgColor.height / 2, 255, 0);
             colorGT = colorG;
         } else {
             // colorG가 원의 중심까지의 길이보다 가까우면 255로 설정
             colorG = 255;
             colorGT = colorG;
         }
-        if (colorB > imgColor.height / 2) {
+        if (colorB > tempSin * imgColor.height / 2) {
+            colorB = 0;
+            colorBT = colorB;
+        } else if (colorB > imgColor.height / 2) {
             // colorB가 원의 중심까지의 길이보다 멀면 255~0으로 설정
-            colorB = 255;
+            colorB = map(colorB, imgColor.height / 2, tempSin * imgColor.height / 2, 255, 0);
             colorBT = colorB;
         } else {
             // colorB가 원의 중심까지의 길이보다 가까우면 255로 설정
-            colorB = map(colorB, 0, imgColor.height / 2, 255, 255);
+            colorB = 255;
             colorBT = colorB;
         }
     }
