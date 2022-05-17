@@ -45,7 +45,7 @@ function setup() {
     colorEyeBrowPR = 0, colorEyeBrowPG = 0, colorEyeBrowPB = 0;
     mouthBrightness = 255, eyeBrowBrightness = 255;
     mouthStrokeWeightValue = 3, eyeBrowStrokeWeightValue = 3;
-    drawButton();
+    button = new Button();
     bright = new Brightness(imgFace.width, imgColor.height);
 }
 
@@ -73,6 +73,7 @@ function draw() {
                 selectColor(selectParts, imgFace.width, 0, eyeBrowBrightness);
             }
         }
+        button.drawButton();
         // 색상변경 후 입술, 눈썹(왼쪽, 오른쪽) 재 출력
         paintMouth(parts.mouth);
         paintEyeBrow(parts.leftEyeBrow);
@@ -289,24 +290,27 @@ function drawStrokeWeight(strokeWeightValue){
     fill(0);
     text(strokeWeightValue, imgFace.width + 285,height-15);
 }
-
-function drawButton() {
+class Button{
+   construct(){
+     let buttonMouth,buttonEyeBrow,buttonStrokeWeightUp,buttonStrokeWeightDown;
+   }
+  drawButton() {
     // 버튼 생성 및 이벤트 설정
-    buttonMouth = createButton('mouth');
-    buttonEyeBrow = createButton('eyebrow');
-    buttonMouth.position(imgFace.width + imgColor.width, 0);
-    buttonEyeBrow.position(imgFace.width + imgColor.width, 20);
-    buttonMouth.mousePressed(selectMouthEvent);
-    buttonEyeBrow.mousePressed(selectEyeBrowEvent);
-    buttonStrokeWeightUp = createButton('↑');
-    buttonStrokeWeightDown = createButton('↓');
-    buttonStrokeWeightUp.position(imgFace.width + 265,height-55);
-    buttonStrokeWeightDown.position(imgFace.width + 295,height-55);
-    buttonStrokeWeightUp.mousePressed(selectStrokeWeightUp);
-    buttonStrokeWeightDown.mousePressed(selectStrokeWeightDown);
+    this.buttonMouth = createButton('mouth');
+    this.buttonEyeBrow = createButton('eyebrow');
+    this.buttonMouth.position(imgFace.width + imgColor.width, 0);
+    this.buttonEyeBrow.position(imgFace.width + imgColor.width, 20);
+    this.buttonMouth.mousePressed(this.selectMouthEvent);
+    this.buttonEyeBrow.mousePressed(this.selectEyeBrowEvent);
+    this.buttonStrokeWeightUp = createButton('↑');
+    this.buttonStrokeWeightDown = createButton('↓');
+    this.buttonStrokeWeightUp.position(imgFace.width + 265,height-55);
+    this.buttonStrokeWeightDown.position(imgFace.width + 295,height-55);
+    this.buttonStrokeWeightUp.mousePressed(this.selectStrokeWeightUp);
+    this.buttonStrokeWeightDown.mousePressed(this.selectStrokeWeightDown);
 }
 
-function selectMouthEvent() {
+  selectMouthEvent() {
     // 마우스를 눌렀을 때 입술 색칠 이벤트
     selectParts = SELECT_MOUTH;
     colorR = colorMouthPR;
@@ -319,7 +323,7 @@ function selectMouthEvent() {
     drawStrokeWeight(mouthStrokeWeightValue);
 }
 
-function selectEyeBrowEvent() {
+  selectEyeBrowEvent() {
     // 마우스를 눌렀을 때 눈 색칠 이벤트
     selectParts = SELECT_EYEBROW;
     colorR = colorEyeBrowPR;
@@ -332,7 +336,7 @@ function selectEyeBrowEvent() {
     drawStrokeWeight(eyeBrowStrokeWeightValue);
 }
 
-function selectStrokeWeightUp(){
+  selectStrokeWeightUp(){
     // 마우스를 눌렀을 때 strokeWeight 0.5 증가;
     if(selectParts == SELECT_MOUTH){
         mouthStrokeWeightValue += 0.5;
@@ -348,7 +352,7 @@ function selectStrokeWeightUp(){
     paintEyeBrow(parts.rightEyeBrow);
 }
 
-function selectStrokeWeightDown(){
+  selectStrokeWeightDown(){
     // 마우스를 눌렀을 때 strokeWeight 0.5 감소;
     if (selectParts == SELECT_MOUTH) {
         if (mouthStrokeWeightValue > 0) {
@@ -366,4 +370,5 @@ function selectStrokeWeightDown(){
     paintMouth(parts.mouth);
     paintEyeBrow(parts.leftEyeBrow);
     paintEyeBrow(parts.rightEyeBrow);
+}
 }
