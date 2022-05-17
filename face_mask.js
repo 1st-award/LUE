@@ -1,3 +1,4 @@
+
 /* 눈썹 및 입술 화장 프로그램
  * 안면 인식 코드를 활용한 유저 커스텀 색상 변경
  * mouth, eyebrow버튼을 클릭하여 원하는 색상으로 눈썹 및 입술 색 변경 가능
@@ -14,6 +15,7 @@ let colorEyeBrowR, colorEyeBrowG, colorEyeBrowB;
 let colorEyeBrowPR, colorEyeBrowPG, colorEyeBrowPB;
 let mouthBrightness, eyeBrowBrightness;
 let selectParts;
+let bright;
 let selectColorActivate = 0;
 let bright;
 const SELECT_MOUTH = 0;
@@ -31,7 +33,7 @@ function setup() {
       createCanvas(imgFace.width + 320, 292);
     }
     else{
-      createCanvas(imgFace.width + 320, imgFace.height);
+        createCanvas(imgFace.width + 320, imgFace.height);
     }
     faceapi = ml5.faceApi(options, modelReady);
     background(255);
@@ -143,6 +145,14 @@ class Brightness {
       this.width = _width;
       this.height = _height;
       // 명도 블록 생성
+    /* 명도 클래스
+     * 이미지의 길이와 높이를 입력받아 width, height로 사용
+     */
+    constructor(_width, _height) {
+        // 맴버 변수
+        this.width = _width;
+        this.height = _height;
+        // 명도 블럭 생성
         push();
         stroke(0, 0, 255);
         rect(this.width + 5, this.height + 15, 255, 45)
@@ -207,7 +217,7 @@ function selectColor(selectPart, posX, posY, brightness) {
     if (dist(mouseX, mouseY, imgColor.width / 2 + posX, imgColor.height / 2 + posY) < imgColor.width / 2 || bright.brightnessIsPressed() === true) {
     //마우스가 imgColor 내에 있거나 명도 안에 있을 때 실행
         if (brightness != 255) {
-        //명도가 255가 아니라면 명도에 따른 색 조절
+            //명도가 255가 아니라면 명도에 따른 색 조절
             if (colorR == 255) {
                 colorRT = brightness;
             } else {
