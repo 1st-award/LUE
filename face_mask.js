@@ -16,6 +16,8 @@ let mouthBrightness, eyeBrowBrightness;
 let selectBrightness;
 let selectParts;
 let selectColorActivate = 0;
+let bright;
+let mouthStrokeWeightValue, eyeBrowStrokeWeightValue;
 const SELECT_MOUTH = 0;
 const SELECT_EYEBROW = 1;
 const ENABLE = 1;
@@ -23,15 +25,14 @@ const ENABLE = 1;
 
 function preload() {
     imgColor = loadImage('color.png');
-    imgFace = loadImage('d31.png');
+    imgFace = loadImage('face.png');
 }
 
 function setup() {
-    if(imgFace.height < 300){
-      createCanvas(imgFace.width + 320, 292);
-    }
-    else{
-      createCanvas(imgFace.width + 320, imgFace.height);
+    if (imgFace.height < 292) {
+        createCanvas(imgFace.width + 320, 292);
+    } else {
+        createCanvas(imgFace.width + 320, imgFace.height);
     }
     faceapi = ml5.faceApi(options, modelReady);
     background(255);
@@ -43,8 +44,9 @@ function setup() {
     colorEyeBrowR = 0, colorEyeBrowG = 0, colorEyeBrowB = 0;
     colorEyeBrowPR = 0, colorEyeBrowPG = 0, colorEyeBrowPB = 0;
     mouthBrightness = 255, eyeBrowBrightness = 255;
-    drawButton();
-    drawBrightnessBlock();
+    mouthStrokeWeightValue = 3, eyeBrowStrokeWeightValue = 3;
+    button = new Button();
+    bright = new Brightness(imgFace.width, imgColor.height);
 }
 
 function draw() {
@@ -54,9 +56,9 @@ function draw() {
         if (selectParts == SELECT_MOUTH) {
             // 선택한 버튼이 입술일 때 명도 및 색상 변경
             if (mouseIsPressed) {
-                if (brightnessIsPressed()) {
+                if (bright.brightnessIsPressed()) {
                     // 명도 블럭이 눌렸을 때 명도 변경
-                    mouthBrightness = getBrightness();
+                    mouthBrightness = bright.getBrightness();
                 }
                 selectColor(selectParts, imgFace.width, 0, mouthBrightness);
             }
@@ -64,13 +66,14 @@ function draw() {
         if (selectParts == SELECT_EYEBROW) {
             // 선택한 버튼이 눈썹일 때 명도 및 색상 변경
             if (mouseIsPressed) {
-                if (brightnessIsPressed()) {
+                if (bright.brightnessIsPressed()) {
                     // 명도 블럭이 눌렸을 때 명도 변경
-                    eyeBrowBrightness = getBrightness();
+                    eyeBrowBrightness = bright.getBrightness();
                 }
                 selectColor(selectParts, imgFace.width, 0, eyeBrowBrightness);
             }
         }
+        button.drawButton();
         // 색상변경 후 입술, 눈썹(왼쪽, 오른쪽) 재 출력
         paintMouth(parts.mouth);
         paintEyeBrow(parts.leftEyeBrow);
@@ -100,8 +103,9 @@ function gotResults(err, results) {
 }
 
 function paintEyeBrow(part) {
-    // 눈 색칠 함수
+    // 눈썹 색칠 함수
     push();
+    strokeWeight(eyeBrowStrokeWeightValue);
     stroke(colorEyeBrowR, colorEyeBrowG, colorEyeBrowB);
     fill(colorEyeBrowR, colorEyeBrowG, colorEyeBrowB);
     beginShape();
@@ -115,13 +119,14 @@ function paintEyeBrow(part) {
 function paintMouth(part) {
     // 입술 색칠 함수
     push();
+    strokeWeight(mouthStrokeWeightValue);
     stroke(colorMouthR, colorMouthG, colorMouthB);
     fill(colorMouthR, colorMouthG, colorMouthB);
     beginShape();
     for (var i = 0; i < 7; i++) {
         vertex(part[i]._x, part[i]._y);
     }
-    for (i = 12; i < 17; i++) {
+    for (i = 16; i > 11; i--) {
         vertex(part[i]._x, part[i]._y);
     }
     endShape(CLOSE);
@@ -129,38 +134,43 @@ function paintMouth(part) {
     for (i = 6; i < 13; i++) {
         vertex(part[i]._x, part[i]._y);
     }
-    for (i = 20; i > 16; i--) {
+    for (i = 20; i > 15; i--) {
         vertex(part[i % 20]._x, part[i % 20]._y);
     }
     endShape(CLOSE);
     pop();
 }
 
-function drawBrightnessBlock() {
-    // 명도 블럭 생성
-    push();
-    stroke(0, 0, 255);
-    rect(imgFace.width + 5, imgColor.height + 15, 255, 45)
-    for (var i = 0; i < 256; i++) {
-        stroke(i);
-        line(imgFace.width + 5 + i, imgColor.height + 15, imgFace.width + 5 + i, imgColor.height + 60);
+class Brightness {
+    constructor(_width, _height) {
+        // 맴버 변수
+        this.width = _width;
+        this.height = _height;
+        // 명도 블록 생성
+        push();
+        stroke(0, 0, 255);
+        rect(this.width + 5, this.height + 15, 255, 45)
+        for (var i = 0; i < 256; i++) {
+            stroke(i);
+            line(this.width + 5 + i, this.height + 15, this.width + 5 + i, this.height + 60);
+        }
+        pop();
     }
-    pop();
-}
 
-function brightnessIsPressed() {
-    // 명도 블럭 범위에 마우스가 입력됐으면 true. 아니면 false
-    if (mouseX >= imgFace.width + 5 && mouseX <= imgFace.width + 260 &&
-        mouseY >= imgColor.height + 15 && mouseY <= imgColor.height + 60) {
-        return true;
+    brightnessIsPressed() {
+        // 명도 블럭 범위에 마우스가 입력됐으면 true. 아니면 false
+        if (mouseX >= imgFace.width + 5 && mouseX <= imgFace.width + 260 &&
+            mouseY >= imgColor.height + 15 && mouseY <= imgColor.height + 60) {
+            return true;
+        }
+        return false;
     }
-    return false;
-}
 
-function getBrightness() {
-    // 마우스 위치에 따라 명도 0 ~ 255 return
-    selectBrightness = map(mouseX, imgFace.width + 5, imgFace.width + 260, 0, 255);
-    return selectBrightness;
+    getBrightness() {
+        // 마우스 위치에 따라 명도 0 ~ 255 return
+        let brightness = map(mouseX, this.width + 5, this.width + 260, 0, 255);
+        return brightness;
+    }
 }
 
 function selectColor(selectPart, posX, posY, brightness) {
@@ -170,27 +180,38 @@ function selectColor(selectPart, posX, posY, brightness) {
         colorR = dist(imgColor.width / 2 + posX, imgColor.height + posY, mouseX, mouseY);
         colorG = dist(imgColor.width / 2 * (1 - sqrt(3) / 2) + posX, imgColor.height / 2 / 2 + posY, mouseX, mouseY);
         colorB = dist(imgColor.width / 2 * (1 + sqrt(3) / 2) + posX, imgColor.height / 2 / 2 + posY, mouseX, mouseY);
-        if (colorR > imgColor.height / 2) {
+        const tempSin = 1 / sin(120);
+        if (colorR > tempSin * imgColor.height / 2) {
+            // tempSin * imgColor.height/2는 R,G,B 각각 서로의 길이
+            colorR = 0;
+            colorRT = colorR;
+        } else if (colorR > imgColor.height / 2) {
             // colorR이 원의 중심까지의 길이보다 멀면 255~0으로 설정
-            colorR = map(colorR, imgColor.height / 2, imgColor.height, 255, 0);
+            colorR = map(colorR, imgColor.height / 2, tempSin * imgColor.height / 2, 255, 0);
             colorRT = colorR;
         } else {
             // colorR이 원의 중심까지의 길이보다 가까우면 255로 설정
             colorR = 255;
             colorRT = colorR;
         }
-        if (colorG > imgColor.height / 2) {
+        if (colorG > tempSin * imgColor.height / 2) {
+            colorG = 0;
+            colorGT = colorG;
+        } else if (colorG > imgColor.height / 2) {
             // colorG가 원의 중심까지의 길이보다 멀면 255~0으로 설정
-            colorG = map(colorG, imgColor.height / 2, imgColor.height, 255, 0);
+            colorG = map(colorG, imgColor.height / 2, tempSin * imgColor.height / 2, 255, 0);
             colorGT = colorG;
         } else {
             // colorG가 원의 중심까지의 길이보다 가까우면 255로 설정
             colorG = 255;
             colorGT = colorG;
         }
-        if (colorB > imgColor.height / 2) {
+        if (colorB > tempSin * imgColor.height / 2) {
+            colorB = 0;
+            colorBT = colorB;
+        } else if (colorB > imgColor.height / 2) {
             // colorB가 원의 중심까지의 길이보다 멀면 255~0으로 설정
-            colorB = map(colorB, 0, imgColor.height / 2, imgColor.height, 0, 255);
+            colorB = map(colorB, imgColor.height / 2, tempSin * imgColor.height / 2, 255, 0);
             colorBT = colorB;
         } else {
             // colorB가 원의 중심까지의 길이보다 가까우면 255로 설정
@@ -198,10 +219,10 @@ function selectColor(selectPart, posX, posY, brightness) {
             colorBT = colorB;
         }
     }
-    if (dist(mouseX, mouseY, imgColor.width / 2 + posX, imgColor.height / 2 + posY) < imgColor.width / 2 || brightnessIsPressed() === true) {
-    //마우스가 imgColor 내에 있거나 명도 안에 있을 때 실행
+    if (dist(mouseX, mouseY, imgColor.width / 2 + posX, imgColor.height / 2 + posY) < imgColor.width / 2 || bright.brightnessIsPressed() === true) {
+        //마우스가 imgColor 내에 있거나 명도 안에 있을 때 실행
         if (brightness != 255) {
-        //명도가 255가 아니라면 명도에 따른 색 조절
+            //명도가 255가 아니라면 명도에 따른 색 조절
             if (colorR == 255) {
                 colorRT = brightness;
             } else {
@@ -263,36 +284,94 @@ function drawColorNum(colorTR, colorTG, colorTB, brightness) {
     text(brightness, imgFace.width + imgColor.width + 70, 110 + 80);
 }
 
-function drawButton() {
-    // 버튼 생성 및 이벤트 설정
-    buttonMouth = createButton('mouth');
-    buttonEyeBrow = createButton('eyebrow');
-    buttonMouth.position(imgFace.width + imgColor.width, 0);
-    buttonEyeBrow.position(imgFace.width + imgColor.width, 20);
-    buttonMouth.mousePressed(selectMouthEvent);
-    buttonEyeBrow.mousePressed(selectEyeBrowEvent);
+
+function drawStrokeWeight(strokeWeightValue) {
+    fill(255);
+    rect(imgFace.width + 285, height - 15, 30, -15);
+    fill(0);
+    text(strokeWeightValue, imgFace.width + 285, height - 15);
 }
 
-function selectMouthEvent() {
-    // 마우스를 눌렀을 때 입술 색칠 이벤트
-    selectParts = SELECT_MOUTH;
-    colorR = colorMouthPR;
-    colorRT = colorMouthR;
-    colorG = colorMouthPG;
-    colorGT = colorMouthG;
-    colorB = colorMouthPB;
-    colorBT = colorMouthB;
-    selectColor(selectParts, imgFace.width, 0, mouthBrightness);
-}
+class Button {
+    construct() {
+        let buttonMouth, buttonEyeBrow, buttonStrokeWeightUp, buttonStrokeWeightDown;
+    }
 
-function selectEyeBrowEvent() {
-    // 마우스를 눌렀을 때 눈 색칠 이벤트
-    selectParts = SELECT_EYEBROW;
-    colorR = colorEyeBrowPR;
-    colorRT = colorEyeBrowR;
-    colorG = colorEyeBrowPG;
-    colorGT = colorEyeBrowG;
-    colorB = colorEyeBrowPB;
-    colorBT = colorEyeBrowB;
-    selectColor(selectParts, imgFace.width, 0, eyeBrowBrightness);
+    drawButton() {
+        // 버튼 생성 및 이벤트 설정
+        this.buttonMouth = createButton('mouth');
+        this.buttonEyeBrow = createButton('eyebrow');
+        this.buttonMouth.position(imgFace.width + imgColor.width, 0);
+        this.buttonEyeBrow.position(imgFace.width + imgColor.width, 20);
+        this.buttonMouth.mousePressed(this.selectMouthEvent);
+        this.buttonEyeBrow.mousePressed(this.selectEyeBrowEvent);
+        this.buttonStrokeWeightUp = createButton('↑');
+        this.buttonStrokeWeightDown = createButton('↓');
+        this.buttonStrokeWeightUp.position(imgFace.width + 265, height - 55);
+        this.buttonStrokeWeightDown.position(imgFace.width + 295, height - 55);
+        this.buttonStrokeWeightUp.mousePressed(this.selectStrokeWeightUp);
+        this.buttonStrokeWeightDown.mousePressed(this.selectStrokeWeightDown);
+    }
+
+    selectMouthEvent() {
+        // 마우스를 눌렀을 때 입술 색칠 이벤트
+        selectParts = SELECT_MOUTH;
+        colorR = colorMouthPR;
+        colorRT = colorMouthR;
+        colorG = colorMouthPG;
+        colorGT = colorMouthG;
+        colorB = colorMouthPB;
+        colorBT = colorMouthB;
+        selectColor(selectParts, imgFace.width, 0, mouthBrightness);
+        drawStrokeWeight(mouthStrokeWeightValue);
+    }
+
+    selectEyeBrowEvent() {
+        // 마우스를 눌렀을 때 눈 색칠 이벤트
+        selectParts = SELECT_EYEBROW;
+        colorR = colorEyeBrowPR;
+        colorRT = colorEyeBrowR;
+        colorG = colorEyeBrowPG;
+        colorGT = colorEyeBrowG;
+        colorB = colorEyeBrowPB;
+        colorBT = colorEyeBrowB;
+        selectColor(selectParts, imgFace.width, 0, eyeBrowBrightness);
+        drawStrokeWeight(eyeBrowStrokeWeightValue);
+    }
+
+    selectStrokeWeightUp() {
+        // 마우스를 눌렀을 때 strokeWeight 0.5 증가;
+        if (selectParts == SELECT_MOUTH) {
+            mouthStrokeWeightValue += 0.5;
+            drawStrokeWeight(mouthStrokeWeightValue);
+        }
+        if (selectParts == SELECT_EYEBROW) {
+            eyeBrowStrokeWeightValue += 0.5;
+            drawStrokeWeight(eyeBrowStrokeWeightValue);
+        }
+        image(imgFace, 0, 0);
+        paintMouth(parts.mouth);
+        paintEyeBrow(parts.leftEyeBrow);
+        paintEyeBrow(parts.rightEyeBrow);
+    }
+
+    selectStrokeWeightDown() {
+        // 마우스를 눌렀을 때 strokeWeight 0.5 감소;
+        if (selectParts == SELECT_MOUTH) {
+            if (mouthStrokeWeightValue > 0) {
+                mouthStrokeWeightValue -= 0.5;
+                drawStrokeWeight(mouthStrokeWeightValue);
+            }
+        }
+        if (selectParts == SELECT_EYEBROW) {
+            if (eyeBrowStrokeWeightValue > 0) {
+                eyeBrowStrokeWeightValue -= 0.5;
+                drawStrokeWeight(eyeBrowStrokeWeightValue);
+            }
+        }
+        image(imgFace, 0, 0);
+        paintMouth(parts.mouth);
+        paintEyeBrow(parts.leftEyeBrow);
+        paintEyeBrow(parts.rightEyeBrow);
+    }
 }
